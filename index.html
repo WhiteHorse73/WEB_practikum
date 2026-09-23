@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог настільних ігор</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Каталог настільних ігор</h1>
+        <nav>
+            <a href="#filters">Фільтри</a>
+            <a href="#games">Список ігор</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="filters">
+            <h2>Фільтри</h2>
+            <form>
+                <label for="player-count">Кількість гравців:</label>
+                <input type="number" id="player-count" name="players" min="1" max="10">
+                
+                <label for="genre-select">Жанр:</label>
+                <select id="genre-select" name="genre">
+                    <option value="coop">Карткові</option>
+                    <option value="coop">Кооперативні</option>
+                    <option value="rpg">RPG</option>
+                    <option value="strategy">Стратегії</option>
+                </select>
+            </form>
+        </section>
+
+        <section id="games">
+            <h2>Ігри</h2>
+            
+            <article>
+                <h3>Cyberpunk 2077: The Board Game</h3>
+                <img src="assets/img/cyberpunk.jpg" alt="Коробка настільної гри Cyberpunk 2077">
+                <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.</p>
+            </article>
+
+            <article>
+                <h3>Stardew Valley: The Board Game</h3>
+                <img src="assets/img/stardew.jpg" alt="Коробка настільної гри Stardew Valley">
+                <p>Кооперативна гра для 1-4 гравців про спільний розвиток ферми, риболовлю та дослідження шахт.</p>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p>Розроблено для практичної роботи. &copy; 2026</p>
+    </footer>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
