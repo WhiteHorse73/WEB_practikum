@@ -15,10 +15,10 @@
         </nav>
     </header>
 
-    <main>
-        <section id="filters">
+    <main class="container">
+        <section id="filters" class="filters-section">
             <h2>Фільтри</h2>
-            <form>
+            <form class="filters-form"> 
                 <label for="player-count">Кількість гравців:</label>
                 <input type="number" id="player-count" name="players" min="1" max="10">
                 
@@ -35,16 +35,20 @@
         <section id="games">
             <h2>Ігри</h2>
             
-            <article>
-                <h3>Cyberpunk 2077: The Board Game</h3>
-                <img src="assets/img/cyberpunk.jpg" alt="Коробка настільної гри Cyberpunk 2077">
-                <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.</p>
+            <article class="game-card">
+                <div class="card-img-placeholder" style="background-color: #ffd700;"></div>
+                <div class="card-content">
+                    <h3>Cyberpunk 2077: The Board Game</h3>
+                    <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої.</p>
+                </div>
             </article>
 
-            <article>
-                <h3>Stardew Valley: The Board Game</h3>
-                <img src="assets/img/stardew.jpg" alt="Коробка настільної гри Stardew Valley">
-                <p>Кооперативна гра для 1-4 гравців про спільний розвиток ферми, риболовлю та дослідження шахт.</p>
+            <article class="game-card">
+                <div class="card-img-placeholder" style="background-color: #40e0d0;"></div>
+                <div class="card-content">
+                    <h3>Stardew Valley: The Board Game</h3>
+                    <p>Кооперативна гра про спільний розвиток ферми, риболовлю та дослідження.</p>
+                </div>
             </article>
         </section>
     </main>

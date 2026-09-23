@@ -1,0 +1,106 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    background-color: #f8f9fa;
+    color: #222;
+}
+
+.site-header {
+    background-color: #6a0dad;
+    color: #ffffff;
+    padding: 24px;
+    text-align: center;
+}
+
+.site-header h1 {
+    margin: 0 0 16px 0;
+    font-size: 2.2rem;
+}
+
+.main-nav a {
+    color: #ffd700;
+    text-decoration: none;
+    margin-right: 16px;
+    font-weight: bold;
+}
+
+.main-nav a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+section {
+    margin-bottom: 40px;
+}
+
+h2 {
+    color: #6a0dad;
+    border-bottom: 2px solid #40e0d0;
+    padding-bottom: 8px;
+}
+
+.filters-form {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filters-form label {
+    display: inline-block;
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.filters-form input,
+.filters-form select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 16px;
+}
+
+.game-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.game-card:hover {
+    box-shadow: 0 10px 15px rgba(106, 13, 173, 0.2); 
+}
+
+.card-img-placeholder {
+    width: 100%;
+    height: 180px;
+}
+
+.card-content {
+    padding: 16px;
+}
+
+.card-content h3 {
+    margin-top: 0;
+    color: #222;
+}
+
+.site-footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #333;
+    color: #ccc;
+    font-size: 0.9rem;
+}
