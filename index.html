@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <h1>Каталог настільних ігор</h1>
-        <nav>
+        <nav class="main-nav">
             <a href="#filters">Фільтри</a>
             <a href="#games">Список ігор</a>
         </nav>
@@ -18,45 +18,72 @@
     <main class="container">
         <section id="filters" class="filters-section">
             <h2>Фільтри</h2>
-            <form class="filters-form"> 
-                <label for="player-count">Кількість гравців:</label>
-                <input type="number" id="player-count" name="players" min="1" max="10">
+            <form class="filters-form">
+                <div class="filter-group">
+                    <label for="player-count">Кількість гравців:</label>
+                    <input type="number" id="player-count" name="players" min="1" max="10">
+                </div>
                 
-                <label for="genre-select">Жанр:</label>
-                <select id="genre-select" name="genre">
-                    <option value="coop">Карткові</option>
-                    <option value="coop">Кооперативні</option>
-                    <option value="rpg">RPG</option>
-                    <option value="strategy">Стратегії</option>
-                </select>
+                <div class="filter-group">
+                    <label for="genre-select">Жанр:</label>
+                    <select id="genre-select" name="genre">
+                        <option value="coop">Кооперативні</option>
+                        <option value="rpg">Рольові (RPG)</option>
+                        <option value="strategy">Стратегії</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-filter">Застосувати</button>
             </form>
         </section>
 
-        <section id="games">
+        <section id="games" class="games-section">
             <h2>Ігри</h2>
             
-            <article class="game-card">
-                <div class="card-img-placeholder" style="background-color: #ffd700;"></div>
-                <div class="card-content">
-                    <h3>Cyberpunk 2077: The Board Game</h3>
-                    <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої.</p>
-                </div>
-            </article>
+            <div class="cards-grid">
+                <article class="game-card">
+                    <img class="card-img" src="assets/img/cyberpunk.jpg" alt="Обкладинка настільної гри Cyberpunk 2077">
+                    <div class="card-content">
+                        <span class="player-badge">1-4 гравці</span>
+                        <h3>Cyberpunk 2077</h3>
+                        <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.</p>
+                    </div>
+                </article>
 
-            <article class="game-card">
-                <div class="card-img-placeholder" style="background-color: #40e0d0;"></div>
-                <div class="card-content">
-                    <h3>Stardew Valley: The Board Game</h3>
-                    <p>Кооперативна гра про спільний розвиток ферми, риболовлю та дослідження.</p>
-                </div>
-            </article>
+                <article class="game-card">
+                    <img class="card-img" src="assets/img/stardew.jpg" alt="Обкладинка настільної гри Stardew Valley">
+                    <div class="card-content">
+                        <span class="player-badge">1-4 гравці</span>
+                        <h3>Stardew Valley</h3>
+                        <p>Кооперативна гра для 1-4 гравців про спільний розвиток ферми, риболовлю та дослідження шахт.</p>
+                    </div>
+                </article>
+                
+                <article class="game-card">
+                    <img class="card-img" src="assets/img/catan.jpg" alt="Обкладинка настільної гри Catan">
+                    <div class="card-content">
+                        <span class="player-badge">3-4 гравці</span>
+                        <h3>Catan</h3>
+                        <p>Класична стратегія, де гравці збирають ресурси для розбудови власних поселень на острові.</p>
+                    </div>
+                </article>
+
+                <article class="game-card">
+                    <img class="card-img" src="assets/img/gloomhaven.jpg" alt="Обкладинка настільної гри Gloomhaven">
+                    <div class="card-content">
+                        <span class="player-badge">1-4 гравці</span>
+                        <h3>Gloomhaven</h3>
+                        <p>Масштабна тактична рольова гра з глибокими підземеллями у похмурому фентезійному світі.</p>
+                    </div>
+                </article>
+            </div>
         </section>
     </main>
 
-    <footer>
-        <p>Розроблено для практичної роботи. &copy; 2026</p>
+    <footer class="site-footer">
+        <p>&copy; 2026 Павло Білоконь — навчальний проєкт «Каталог настільних ігор»</p>
     </footer>
-    
+
     <script src="js/app.js"></script>
 </body>
 </html>
