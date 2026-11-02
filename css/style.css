@@ -140,6 +140,32 @@ h2 {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+/* Гра підходить для заданої кількості гравців (клас fits додає script.js):
+   зелена рамка й позначка в куті. Білий текст на #196f3d - контраст 6.2:1. */
+.game-card.fits {
+    outline: 3px solid #196f3d;
+    outline-offset: -3px;
+}
+
+.game-card.fits::after {
+    content: '✓ Підходить';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: #196f3d;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.games-count {
+    margin: -8px 0 24px 0;
+    font-weight: 600;
 }
 
 .game-card:hover {
@@ -154,6 +180,20 @@ h2 {
     object-fit: cover;
 }
 
+/* Заглушка для гри без обкладинки: назва на фоні основного кольору */
+.card-img-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #4a154b, #2471a3);
+    color: #ffffff;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
 .card-content {
     padding: 20px;
     flex-grow: 1; 
@@ -162,7 +202,8 @@ h2 {
     align-items: flex-start;
 }
 
-.player-badge {
+/* .card-content .player-badge - щоб бейдж-абзац <p> не перебивало правило .card-content p */
+.card-content .player-badge {
     background-color: #2471a3;
     color: #ffffff;
     font-size: 0.8rem;
