@@ -13,28 +13,42 @@
         <nav class="main-nav">
             <a href="#filters">Фільтри</a>
             <a href="#games">Список ігор</a>
+            <a href="#add-game">Додати гру</a>
         </nav>
     </header>
 
     <main class="container">
         <section id="filters" class="filters-section">
             <h2>Фільтри</h2>
-            <form class="filters-form">
+            <!-- Список перефільтровується одразу на подію change, тому кнопка не потрібна -->
+            <form id="filters-form" class="filters-form" autocomplete="off">
                 <div class="filter-group">
                     <label for="player-count">Кількість гравців:</label>
-                    <input type="number" id="player-count" name="players" min="1" max="10">
+                    <select id="player-count" name="players">
+                        <option value="">Будь-яка</option>
+                        <option value="1">1 гравець</option>
+                        <option value="2">2 гравці</option>
+                        <option value="3">3 гравці</option>
+                        <option value="4">4 гравці</option>
+                        <option value="5">5 гравців</option>
+                        <option value="6">6 гравців</option>
+                        <option value="7">7 гравців</option>
+                        <option value="8">8 гравців</option>
+                        <option value="9">9 гравців</option>
+                        <option value="10">10 гравців</option>
+                    </select>
                 </div>
-                
+
                 <div class="filter-group">
                     <label for="genre-select">Жанр:</label>
                     <select id="genre-select" name="genre">
+                        <option value="">Усі жанри</option>
                         <option value="coop">Кооперативні</option>
                         <option value="rpg">Рольові (RPG)</option>
                         <option value="strategy">Стратегії</option>
+                        <option value="party">Вечіркові</option>
                     </select>
                 </div>
-                
-                <button type="submit" class="btn-filter">Застосувати</button>
             </form>
         </section>
 
@@ -81,6 +95,44 @@
                     </div>
                 </article>
             </div>
+        </section>
+
+        <!-- Секція одразу під списком: нова картка з'являється поруч із формою -->
+        <section id="add-game" class="add-game-section">
+            <h2>Додати гру</h2>
+            <form id="add-game-form" class="add-form">
+                <p id="form-status" class="form-status" role="status"></p>
+
+                <div class="filter-group">
+                    <label for="new-title">Назва:</label>
+                    <input type="text" id="new-title" name="title" required maxlength="40"
+                           pattern=".*\S.*" title="Назва не може складатися лише з пробілів">
+                </div>
+
+                <div class="filter-group">
+                    <label for="new-min-players">Мінімум гравців:</label>
+                    <input type="number" id="new-min-players" name="minPlayers" required min="1" max="10">
+                </div>
+
+                <div class="filter-group">
+                    <label for="new-max-players">Максимум гравців:</label>
+                    <input type="number" id="new-max-players" name="maxPlayers" required min="1" max="10">
+                </div>
+
+                <div class="filter-group">
+                    <label for="new-genre">Жанр:</label>
+                    <select id="new-genre" name="genre">
+                        <option value="coop">Кооперативні</option>
+                        <option value="rpg">Рольові (RPG)</option>
+                        <option value="strategy">Стратегії</option>
+                        <option value="party">Вечіркові</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary">Додати гру</button>
+
+                <p id="form-error" class="form-error" role="alert" hidden></p>
+            </form>
         </section>
     </main>
 
