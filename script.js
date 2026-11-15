@@ -1,5 +1,10 @@
-// Практичні роботи №6–8 — Основи JavaScript, маніпуляція DOM, обробка подій і форми
+// Практичні роботи №6–9 — Основи JavaScript, маніпуляція DOM, обробка подій і форми,
+// клієнт для API
 // Варіант 4: Каталог настільних ігор
+
+// Ендпоінт практикуму 9: JSONPlaceholder, задачі користувача 1
+// (мок: title - назва гри, completed - «вже зіграно»)
+const API_URL = 'https://jsonplaceholder.typicode.com/todos?userId=1';
 
 console.log('script.js підключено');
 
@@ -90,21 +95,32 @@ const formatPlayers = game => game.minPlayers === game.maxPlayers
     ? `${game.maxPlayers} ${playersWord(game.maxPlayers)}`
     : `${game.minPlayers}–${game.maxPlayers} ${playersWord(game.maxPlayers)}`;
 
-// Рендер списку ігор: очищає контейнер #games-list і для кожної гри масиву
-// створює картку article (обкладинка, бейджі гравців і жанру, назва, опис), задає
-// атрибути data-players і data-genre, додає клас fits, якщо у фільтрі обрано
-// кількість гравців і гра їй підходить, і вставляє картку в контейнер;
-// наприкінці оновлює підсумок
-function renderGames(gameList) {
-    listContainer.innerHTML = '';
+// Рендер списку ігор: очищає контейнер (за замовчуванням #games-list) і для кожної
+// гри масиву створює картку article (обкладинка, бейджі, назва, опис) і вставляє
+// її в контейнер. Бейджі й атрибути з'являються лише для тих полів, які є в грі:
+// у каталозі - гравці (data-players, клас fits) і жанр (data-genre),
+// в іграх з API (практикум 9) - позначка «зіграно» (data-played, клас played)
+function renderGames(gameList, container = listContainer) {
+    container.innerHTML = '';
 
     gameList.forEach(game => {
         const card = document.createElement('article');
         card.classList.add('game-card');
-        card.dataset.players = `${game.minPlayers}-${game.maxPlayers}`;
-        card.dataset.genre = game.genre;
-        if (targetPlayers !== null && fitsPlayers(game, targetPlayers)) {
+        const hasPlayers = game.minPlayers !== undefined;
+        if (hasPlayers) {
+            card.dataset.players = `${game.minPlayers}-${game.maxPlayers}`;
+        }
+        if (game.genre) {
+            card.dataset.genre = game.genre;
+        }
+        if (hasPlayers && targetPlayers !== null && fitsPlayers(game, targetPlayers)) {
             card.classList.add('fits');
+        }
+        if (game.played !== undefined) {
+            card.dataset.played = game.played;
+            if (game.played) {
+                card.classList.add('played');
+            }
         }
 
         // Обкладинка: зображення, якщо воно є, інакше кольорова заглушка з назвою
@@ -118,6 +134,10 @@ function renderGames(gameList) {
             cover.classList.add('card-img-placeholder');
             cover.setAttribute('aria-hidden', 'true');
             cover.textContent = game.title;
+            // Довгі назви (в іграх з API - до 63 символів) друкуємо дрібніше, щоб вмістилися
+            if (game.title.length > 30) {
+                cover.classList.add('long-title');
+            }
         }
         cover.classList.add('card-img');
 
@@ -127,15 +147,26 @@ function renderGames(gameList) {
         const badges = document.createElement('div');
         badges.classList.add('card-badges');
 
-        const players = document.createElement('p');
-        players.classList.add('player-badge');
-        players.textContent = formatPlayers(game);
+        if (hasPlayers) {
+            const players = document.createElement('p');
+            players.classList.add('player-badge');
+            players.textContent = formatPlayers(game);
+            badges.append(players);
+        }
 
-        const genre = document.createElement('p');
-        genre.classList.add('genre-badge');
-        genre.textContent = genreLabels[game.genre];
+        if (game.genre) {
+            const genre = document.createElement('p');
+            genre.classList.add('genre-badge');
+            genre.textContent = genreLabels[game.genre];
+            badges.append(genre);
+        }
 
-        badges.append(players, genre);
+        if (game.played !== undefined) {
+            const played = document.createElement('p');
+            played.classList.add('played-badge');
+            played.textContent = game.played ? '✓ Зіграно' : 'Ще не зіграно';
+            badges.append(played);
+        }
 
         const title = document.createElement('h3');
         title.textContent = game.title;
@@ -150,10 +181,8 @@ function renderGames(gameList) {
         }
 
         card.append(cover, content);
-        listContainer.append(card);
+        container.append(card);
     });
-
-    updateGamesCount(gameList);
 }
 
 // Оновлює текст наявного елемента p#games-count: скільки ігор показано,
@@ -193,11 +222,13 @@ const matchesFilters = game =>
     (targetPlayers === null || fitsPlayers(game, targetPlayers)) &&
     (genreFilter.value === '' || game.genre === genreFilter.value);
 
-// Зчитує select кількості гравців (value - рядок, тому Number) і рендерить
-// лише ті ігри, що проходять фільтри
+// Зчитує select кількості гравців (value - рядок, тому Number), рендерить
+// лише ті ігри, що проходять фільтри, і оновлює підсумок
 function applyFilters() {
     targetPlayers = playersFilter.value === '' ? null : Number(playersFilter.value);
-    renderGames(games.filter(matchesFilters));
+    const filtered = games.filter(matchesFilters);
+    renderGames(filtered);
+    updateGamesCount(filtered);
 }
 
 // Показує текст помилки під полями форми або ховає елемент, якщо текст порожній
@@ -277,6 +308,104 @@ addForm.addEventListener('submit', event => {
 
 // Перший рендер сторінки
 applyFilters();
+
+// ---------- Практикум 9: клієнт для API (fetch, async/await) ----------
+
+// Елементи секції «Ігри з API»
+const apiList = document.querySelector('#api-games-list');
+const apiCount = document.querySelector('#api-games-count');
+const apiStatus = document.querySelector('#api-status');
+const apiError = document.querySelector('#api-error');
+const reloadButton = document.querySelector('#api-reload');
+
+// Стрілкова функція: назви в JSONPlaceholder - з малої літери, на картці - з великої
+const capitalize = text => text.charAt(0).toUpperCase() + text.slice(1);
+
+// Стрілкова функція: зіставляє задачу JSONPlaceholder з об'єктом гри,
+// який розуміє renderGames (title - назва гри, completed - «вже зіграно»)
+const todoToGame = todo => ({
+    id: todo.id,
+    title: capitalize(todo.title),
+    played: todo.completed
+});
+
+// Вмикає або вимикає стан завантаження: текст у p#api-status, неактивна кнопка
+// «Оновити» (щоб не надіслати кілька запитів одночасно) і aria-busy на списку
+function setLoading(isLoading) {
+    reloadButton.disabled = isLoading;
+    apiList.setAttribute('aria-busy', String(isLoading));
+    if (isLoading) {
+        apiStatus.textContent = 'Завантаження…';
+    }
+}
+
+// Показує зрозуміле користувачу повідомлення про помилку або ховає елемент
+function showApiError(message) {
+    apiError.textContent = message;
+    apiError.hidden = message === '';
+}
+
+// Перетворює виняток на текст для користувача, технічні деталі лишаються в консолі.
+// fetch відхиляє Promise з TypeError лише тоді, коли запит не дійшов до сервера
+function getApiErrorMessage(error) {
+    if (error instanceof TypeError) {
+        return 'Не вдалося завантажити список ігор: немає з\'єднання з сервером. ' +
+            'Перевірте підключення до інтернету й натисніть «Оновити».';
+    }
+    return 'Сервер не віддав список ігор. Спробуйте оновити пізніше.';
+}
+
+// Оновлює підсумок під заголовком секції: скільки ігор отримано і скільки з них зіграно
+function updateApiCount(gameList) {
+    const playedCount = gameList.filter(game => game.played).length;
+    apiCount.textContent = `Ігор у списку: ${gameList.length}. Уже зіграно: ${playedCount}`;
+}
+
+// Завантажує список ігор з JSONPlaceholder (https://jsonplaceholder.typicode.com/,
+// ендпоінт /todos?userId=1) через Fetch API і виводить його функцією renderGames.
+// Помилки HTTP (404, 500) і мережеві збої потрапляють в один catch.
+// Параметр url дає змогу перевірити обробку 404 з консолі:
+// loadData('https://jsonplaceholder.typicode.com/todoz')
+async function loadData(url = API_URL) {
+    setLoading(true);
+    showApiError('');
+    try {
+        const response = await fetch(url);
+        // fetch не вважає 404/500 помилкою, тому статус перевіряємо вручну
+        if (!response.ok) {
+            throw new Error(`Сервер відповів кодом ${response.status} (${url})`);
+        }
+        const data = await response.json();
+        console.log('Відповідь API:', data);
+        if (!Array.isArray(data)) {
+            throw new Error('Очікувався масив задач, отримано інший формат JSON');
+        }
+
+        const apiGames = data.map(todoToGame);
+        renderGames(apiGames, apiList);
+        updateApiCount(apiGames);
+        apiStatus.textContent = apiGames.length === 0
+            ? 'Сервер повернув порожній список.'
+            : `Оновлено о ${new Date().toLocaleTimeString('uk-UA')}.`;
+    } catch (error) {
+        // Попередні дані прибираємо, щоб не видавати їх за актуальні
+        apiList.innerHTML = '';
+        apiCount.textContent = 'Ігор у списку: 0';
+        apiStatus.textContent = '';
+        showApiError(getApiErrorMessage(error));
+        console.error('Помилка завантаження ігор з API:', error);
+    } finally {
+        setLoading(false);
+    }
+}
+
+// Подія click на кнопці «Оновити»: повторний запит без перезавантаження сторінки
+reloadButton.addEventListener('click', () => {
+    loadData();
+});
+
+// Перше завантаження даних з API
+loadData();
 
 // ---------- Практикум 6: вивід у консоль ----------
 

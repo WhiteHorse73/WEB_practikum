@@ -167,6 +167,40 @@ h2 {
     background-color: #a93226;
 }
 
+/* Поки триває запит до API, script.js вимикає кнопку «Оновити» */
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+/* Секція «Ігри з API»: пояснення й кнопка «Оновити» в одному рядку на широкому екрані */
+.api-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.api-note {
+    margin: 0;
+    flex: 1 1 280px;
+}
+
+.api-status {
+    margin: 0 0 16px 0;
+    font-style: italic;
+}
+
+.api-status:empty {
+    display: none;
+}
+
+.api-error {
+    margin-bottom: 16px;
+}
+
 .cards-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -234,6 +268,12 @@ h2 {
     letter-spacing: 1px;
     text-align: center;
     overflow-wrap: anywhere;
+    overflow: hidden;
+}
+
+/* Довга назва (клас додає script.js) - дрібнішим шрифтом, щоб не виходила за межі заглушки */
+.card-img-placeholder.long-title {
+    font-size: 1.15rem;
 }
 
 .card-content {
@@ -253,7 +293,8 @@ h2 {
 
 /* .card-content .player-badge - щоб бейдж-абзац <p> не перебивало правило .card-content p */
 .card-content .player-badge,
-.card-content .genre-badge {
+.card-content .genre-badge,
+.card-content .played-badge {
     color: #ffffff;
     font-size: 0.8rem;
     font-weight: bold;
@@ -268,6 +309,18 @@ h2 {
 
 .card-content .genre-badge {
     background-color: #4a154b;
+}
+
+/* Позначка «зіграно» для ігор з API: сірий бейдж для ще не зіграних (#2c3e50 на #e2e8f0 - 8.9:1)
+   і зелений для зіграних (білий на #196f3d - 6.2:1) */
+.card-content .played-badge {
+    background-color: #e2e8f0;
+    color: #2c3e50;
+}
+
+.game-card.played .played-badge {
+    background-color: #196f3d;
+    color: #ffffff;
 }
 
 /* 

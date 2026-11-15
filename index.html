@@ -14,6 +14,7 @@
             <a href="#filters">Фільтри</a>
             <a href="#games">Список ігор</a>
             <a href="#add-game">Додати гру</a>
+            <a href="#api-games">Ігри з API</a>
         </nav>
     </header>
 
@@ -133,6 +134,19 @@
 
                 <p id="form-error" class="form-error" role="alert" hidden></p>
             </form>
+        </section>
+
+        <!-- Практикум 9: список завантажується з JSONPlaceholder через fetch (script.js) -->
+        <section id="api-games" class="api-section">
+            <h2>Ігри з API</h2>
+            <div class="api-toolbar">
+                <p class="api-note">Список «зіграти» з тестового сервісу JSONPlaceholder: назва гри та позначка, чи її вже зіграно.</p>
+                <button type="button" id="api-reload" class="btn-primary">Оновити</button>
+            </div>
+            <p id="api-status" class="api-status" role="status"></p>
+            <p id="api-error" class="form-error api-error" role="alert" hidden></p>
+            <p id="api-games-count" class="games-count">Ігор у списку: 0</p>
+            <div id="api-games-list" class="cards-grid"></div>
         </section>
     </main>
 
