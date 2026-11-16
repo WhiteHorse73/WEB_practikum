@@ -7,6 +7,12 @@ img {
     height: auto;
 }
 
+/* Шаблон Vue (main#app) прихований, доки застосунок не змонтовано:
+   інакше на мить було б видно «сирі» {{ }} - атрибут v-cloak Vue прибирає сам */
+[v-cloak] {
+    display: none;
+}
+
 /* Плавний перехід до нової картки та якорів меню - лише якщо користувач не вимкнув анімації */
 @media (prefers-reduced-motion: no-preference) {
     html {
@@ -309,6 +315,31 @@ h2 {
 
 .card-content .genre-badge {
     background-color: #4a154b;
+}
+
+/* Жанр у картці - кнопка (практикум 10): клік фільтрує список за цим жанром.
+   Скидаємо стандартний вигляд button, залишаючи вигляд бейджа */
+.card-content button.genre-badge {
+    border: none;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.card-content button.genre-badge:hover {
+    background-color: #6b2a6c;
+}
+
+.card-content button.genre-badge:focus-visible {
+    outline: 3px solid #f1c40f;
+    outline-offset: 2px;
+}
+
+/* Жанр, за яким зараз відфільтровано список: жовтий бейдж (#4a154b на #f1c40f - 8.4:1) */
+.card-content button.genre-badge[aria-pressed="true"] {
+    background-color: #f1c40f;
+    color: #4a154b;
 }
 
 /* Позначка «зіграно» для ігор з API: сірий бейдж для ще не зіграних (#2c3e50 на #e2e8f0 - 8.9:1)

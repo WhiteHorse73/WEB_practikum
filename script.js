@@ -1,6 +1,10 @@
-// Практичні роботи №6–9 — Основи JavaScript, маніпуляція DOM, обробка подій і форми,
-// клієнт для API
+// Практичні роботи №6–10 — Основи JavaScript, маніпуляція DOM, обробка подій і форми,
+// клієнт для API, клієнтський фреймворк
 // Варіант 4: Каталог настільних ігор
+//
+// Практикум 10: обрано Vue 3, бо його глобальна збірка з CDN працює без Babel і JSX,
+// шаблони пишуться прямо в наявному index.html, а зміни стану відстежуються автоматично
+// без ручного виклику функції рендеру.
 
 // Ендпоінт практикуму 9: JSONPlaceholder, задачі користувача 1
 // (мок: title - назва гри, completed - «вже зіграно»)
@@ -8,57 +12,7 @@ const API_URL = 'https://jsonplaceholder.typicode.com/todos?userId=1';
 
 console.log('script.js підключено');
 
-// Прибираємо статичні картки-приклади з практикуму 2: вони лишаються в HTML
-// як орієнтир структури, але тепер картки генеруються з масиву games
-const staticCards = document.querySelectorAll('#games-list .game-card');
-staticCards.forEach(card => card.remove());
-
-// Дані варіанта: масив ігор каталогу з діапазоном кількості гравців, жанром,
-// обкладинкою (якщо є) та коротким описом
-const games = [
-    {
-        title: 'Cyberpunk 2077', minPlayers: 1, maxPlayers: 4, genre: 'rpg',
-        image: 'assets/img/cyberpunk.jpg',
-        description: 'Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.'
-    },
-    {
-        title: 'Stardew Valley', minPlayers: 1, maxPlayers: 4, genre: 'coop',
-        image: 'assets/img/stardew.jpg',
-        description: 'Кооперативна гра про спільний розвиток ферми, риболовлю та дослідження шахт.'
-    },
-    {
-        title: 'Catan', minPlayers: 3, maxPlayers: 4, genre: 'strategy',
-        image: 'assets/img/catan.jpg',
-        description: 'Класична стратегія, де гравці збирають ресурси для розбудови власних поселень на острові.'
-    },
-    {
-        title: 'Gloomhaven', minPlayers: 1, maxPlayers: 4, genre: 'rpg',
-        image: 'assets/img/gloomhaven.jpg',
-        description: 'Масштабна тактична рольова гра з глибокими підземеллями у похмурому фентезійному світі.'
-    },
-    {
-        title: 'Codenames', minPlayers: 2, maxPlayers: 8, genre: 'party',
-        description: 'Командна гра на асоціації: капітан одним словом підказує, які агенти належать його команді.'
-    },
-    {
-        title: 'Terraforming Mars', minPlayers: 1, maxPlayers: 5, genre: 'strategy',
-        description: 'Корпорації змагаються, перетворюючи Марс на планету, придатну для життя.'
-    },
-    {
-        title: 'Dixit', minPlayers: 3, maxPlayers: 6, genre: 'party',
-        description: 'Гра на уяву: гравці загадують сюрреалістичні картинки та відгадують чужі асоціації.'
-    },
-    {
-        title: '7 Wonders Duel', minPlayers: 2, maxPlayers: 2, genre: 'strategy',
-        description: 'Дуель двох цивілізацій: розвиток науки, армії та будівництво семи чудес світу.'
-    },
-    {
-        title: 'Avalon', minPlayers: 5, maxPlayers: 10, genre: 'party',
-        description: 'Гра на соціальну дедукцію: лицарі Артура шукають зрадників серед своїх.'
-    }
-];
-
-// Підписи жанрів для бейджа на картці (ключі - значення option у формах)
+// Підписи жанрів (ключі - значення option у формах і поле genre у грі)
 const genreLabels = {
     coop: 'Кооперативні',
     rpg: 'Рольові (RPG)',
@@ -66,16 +20,11 @@ const genreLabels = {
     party: 'Вечіркові'
 };
 
-// Контейнер списку ігор і підсумковий елемент на сторінці
-const listContainer = document.querySelector('#games-list');
-const gamesCount = document.querySelector('#games-count');
-
-// Кількість гравців, обрана у фільтрі (null - фільтр не задано).
-// Значення встановлює обробник change у функції applyFilters
-let targetPlayers = null;
-
 // Кількість гравців для виводу в консоль (практикум 6)
 const playersCount = 5;
+
+// ---------- Чисті допоміжні функції (практикуми 6-9) ----------
+// Не читають і не змінюють стан: результат залежить лише від аргументів
 
 // Стрілкова функція: перевіряє, чи гра підходить для n гравців
 const fitsPlayers = (game, n) => n >= game.minPlayers && n <= game.maxPlayers;
@@ -95,317 +44,310 @@ const formatPlayers = game => game.minPlayers === game.maxPlayers
     ? `${game.maxPlayers} ${playersWord(game.maxPlayers)}`
     : `${game.minPlayers}–${game.maxPlayers} ${playersWord(game.maxPlayers)}`;
 
-// Рендер списку ігор: очищає контейнер (за замовчуванням #games-list) і для кожної
-// гри масиву створює картку article (обкладинка, бейджі, назва, опис) і вставляє
-// її в контейнер. Бейджі й атрибути з'являються лише для тих полів, які є в грі:
-// у каталозі - гравці (data-players, клас fits) і жанр (data-genre),
-// в іграх з API (практикум 9) - позначка «зіграно» (data-played, клас played)
-function renderGames(gameList, container = listContainer) {
-    container.innerHTML = '';
-
-    gameList.forEach(game => {
-        const card = document.createElement('article');
-        card.classList.add('game-card');
-        const hasPlayers = game.minPlayers !== undefined;
-        if (hasPlayers) {
-            card.dataset.players = `${game.minPlayers}-${game.maxPlayers}`;
-        }
-        if (game.genre) {
-            card.dataset.genre = game.genre;
-        }
-        if (hasPlayers && targetPlayers !== null && fitsPlayers(game, targetPlayers)) {
-            card.classList.add('fits');
-        }
-        if (game.played !== undefined) {
-            card.dataset.played = game.played;
-            if (game.played) {
-                card.classList.add('played');
-            }
-        }
-
-        // Обкладинка: зображення, якщо воно є, інакше кольорова заглушка з назвою
-        let cover;
-        if (game.image) {
-            cover = document.createElement('img');
-            cover.src = game.image;
-            cover.alt = `Обкладинка настільної гри ${game.title}`;
-        } else {
-            cover = document.createElement('div');
-            cover.classList.add('card-img-placeholder');
-            cover.setAttribute('aria-hidden', 'true');
-            cover.textContent = game.title;
-            // Довгі назви (в іграх з API - до 63 символів) друкуємо дрібніше, щоб вмістилися
-            if (game.title.length > 30) {
-                cover.classList.add('long-title');
-            }
-        }
-        cover.classList.add('card-img');
-
-        const content = document.createElement('div');
-        content.classList.add('card-content');
-
-        const badges = document.createElement('div');
-        badges.classList.add('card-badges');
-
-        if (hasPlayers) {
-            const players = document.createElement('p');
-            players.classList.add('player-badge');
-            players.textContent = formatPlayers(game);
-            badges.append(players);
-        }
-
-        if (game.genre) {
-            const genre = document.createElement('p');
-            genre.classList.add('genre-badge');
-            genre.textContent = genreLabels[game.genre];
-            badges.append(genre);
-        }
-
-        if (game.played !== undefined) {
-            const played = document.createElement('p');
-            played.classList.add('played-badge');
-            played.textContent = game.played ? '✓ Зіграно' : 'Ще не зіграно';
-            badges.append(played);
-        }
-
-        const title = document.createElement('h3');
-        title.textContent = game.title;
-
-        content.append(badges, title);
-
-        // У форми додавання немає поля опису, тому в нової гри він порожній
-        if (game.description) {
-            const description = document.createElement('p');
-            description.textContent = game.description;
-            content.append(description);
-        }
-
-        card.append(cover, content);
-        container.append(card);
-    });
-}
-
-// Оновлює текст наявного елемента p#games-count: скільки ігор показано,
-// скільки їх усього в каталозі і для якої кількості гравців задано фільтр
-function updateGamesCount(gameList) {
-    let text = `Ігор у списку: ${gameList.length}`;
-    if (gameList.length < games.length) {
-        text += ` із ${games.length}`;
-    }
-    if (targetPlayers !== null) {
-        text += ` (для ${targetPlayers} ${targetPlayers === 1 ? 'гравця' : 'гравців'})`;
-    }
-    if (gameList.length === 0) {
-        text += '. Спробуйте змінити фільтри';
-    }
-    gamesCount.textContent = text;
-}
-
-// ---------- Практикум 8: обробка подій, форма, валідація ----------
-
-// Елементи форми фільтрів
-const filtersForm = document.querySelector('#filters-form');
-const playersFilter = document.querySelector('#player-count');
-const genreFilter = document.querySelector('#genre-select');
-
-// Елементи форми додавання гри
-const addForm = document.querySelector('#add-game-form');
-const titleInput = document.querySelector('#new-title');
-const minPlayersInput = document.querySelector('#new-min-players');
-const maxPlayersInput = document.querySelector('#new-max-players');
-const genreInput = document.querySelector('#new-genre');
-const formError = document.querySelector('#form-error');
-const formStatus = document.querySelector('#form-status');
-
-// Стрілкова функція: перевіряє, чи гра відповідає поточним значенням фільтрів
-const matchesFilters = game =>
-    (targetPlayers === null || fitsPlayers(game, targetPlayers)) &&
-    (genreFilter.value === '' || game.genre === genreFilter.value);
-
-// Зчитує select кількості гравців (value - рядок, тому Number), рендерить
-// лише ті ігри, що проходять фільтри, і оновлює підсумок
-function applyFilters() {
-    targetPlayers = playersFilter.value === '' ? null : Number(playersFilter.value);
-    const filtered = games.filter(matchesFilters);
-    renderGames(filtered);
-    updateGamesCount(filtered);
-}
-
-// Показує текст помилки під полями форми або ховає елемент, якщо текст порожній
-function showFormError(message) {
-    formError.textContent = message;
-    formError.hidden = message === '';
-    const isInvalid = String(message !== '');
-    minPlayersInput.setAttribute('aria-invalid', isInvalid);
-    maxPlayersInput.setAttribute('aria-invalid', isInvalid);
-}
-
-// Перевірка варіанта: мінімум гравців не може перевищувати максимум.
-// Повертає текст помилки або порожній рядок, якщо діапазон коректний
-function getRangeError() {
-    const min = Number(minPlayersInput.value);
-    const max = Number(maxPlayersInput.value);
-    return min > max
-        ? `Мінімум гравців (${min}) не може бути більшим за максимум (${max})`
-        : '';
-}
-
-// Подія change на select «кількість гравців»: перефільтровує список через fitsPlayers.
-// Так само реагує select жанру - обидва фільтри діють разом
-playersFilter.addEventListener('change', applyFilters);
-genreFilter.addEventListener('change', applyFilters);
-
-// Подія input на всій формі (спливає від кожного поля): прибирає повідомлення
-// про успіх і знімає текст помилки, щойно користувач виправив діапазон
-addForm.addEventListener('input', () => {
-    formStatus.textContent = '';
-    if (!formError.hidden) {
-        showFormError(getRangeError());
-    }
-});
-
-// Подія submit форми додавання. Браузер викликає її лише тоді, коли пройдено
-// вбудовану перевірку (required, pattern, min, max), тож порожні поля сюди не доходять
-addForm.addEventListener('submit', event => {
-    // Без цього стандартна поведінка form перезавантажить сторінку й скине масив games
-    event.preventDefault();
-
-    // Додаткова перевірка перед push: при помилці форму не очищаємо, щоб можна було виправити
-    const rangeError = getRangeError();
-    if (rangeError !== '') {
-        showFormError(rangeError);
-        console.warn(`Помилка валідації: ${rangeError}`);
-        minPlayersInput.focus();
-        return;
-    }
-
-    // Новий об'єкт має ту саму форму, що й елементи масиву games
-    const newGame = {
-        title: titleInput.value.trim(),
-        minPlayers: Number(minPlayersInput.value),
-        maxPlayers: Number(maxPlayersInput.value),
-        genre: genreInput.value,
-        description: ''
-    };
-    games.push(newGame);
-    console.log(`Додано гру: ${newGame.title} (${formatPlayers(newGame)}). Усього ігор: ${games.length}`);
-
-    // Нова гра має одразу з'явитися на сторінці, тому заважаючі фільтри скидаємо
-    let status = `Гру «${newGame.title}» додано до каталогу.`;
-    if (!matchesFilters(newGame)) {
-        filtersForm.reset();
-        status += ' Фільтри скинуто, щоб її було видно.';
-    }
-
-    applyFilters();
-    addForm.reset();
-    formStatus.textContent = status;
-
-    // Повідомлення стоїть над полями форми, а нова картка - над ним: якщо притиснути
-    // повідомлення до низу вікна, на екрані видно і його, і щойно додану картку
-    formStatus.scrollIntoView({ block: 'end' });
-});
-
-// Перший рендер сторінки
-applyFilters();
-
-// ---------- Практикум 9: клієнт для API (fetch, async/await) ----------
-
-// Елементи секції «Ігри з API»
-const apiList = document.querySelector('#api-games-list');
-const apiCount = document.querySelector('#api-games-count');
-const apiStatus = document.querySelector('#api-status');
-const apiError = document.querySelector('#api-error');
-const reloadButton = document.querySelector('#api-reload');
-
 // Стрілкова функція: назви в JSONPlaceholder - з малої літери, на картці - з великої
 const capitalize = text => text.charAt(0).toUpperCase() + text.slice(1);
 
-// Стрілкова функція: зіставляє задачу JSONPlaceholder з об'єктом гри,
-// який розуміє renderGames (title - назва гри, completed - «вже зіграно»)
+// Стрілкова функція: зіставляє задачу JSONPlaceholder з об'єктом гри
+// (title - назва гри, completed - «вже зіграно»)
 const todoToGame = todo => ({
     id: todo.id,
     title: capitalize(todo.title),
     played: todo.completed
 });
 
-// Вмикає або вимикає стан завантаження: текст у p#api-status, неактивна кнопка
-// «Оновити» (щоб не надіслати кілька запитів одночасно) і aria-busy на списку
-function setLoading(isLoading) {
-    reloadButton.disabled = isLoading;
-    apiList.setAttribute('aria-busy', String(isLoading));
-    if (isLoading) {
-        apiStatus.textContent = 'Завантаження…';
-    }
-}
+// Порожні поля форми додавання (genre за замовчуванням - перший пункт select)
+const emptyNewGame = () => ({ title: '', minPlayers: '', maxPlayers: '', genre: 'coop' });
 
-// Показує зрозуміле користувачу повідомлення про помилку або ховає елемент
-function showApiError(message) {
-    apiError.textContent = message;
-    apiError.hidden = message === '';
-}
+// Функцію renderGames з практикумів 7-9 (createElement, append, innerHTML = '') видалено:
+// картки тепер описує компонент GameCard, а Vue сам оновлює DOM, коли змінюється стан.
+// Так само прибрано querySelector для списку, фільтрів, форми й секції API.
 
-// Перетворює виняток на текст для користувача, технічні деталі лишаються в консолі.
-// fetch відхиляє Promise з TypeError лише тоді, коли запит не дійшов до сервера
-function getApiErrorMessage(error) {
-    if (error instanceof TypeError) {
-        return 'Не вдалося завантажити список ігор: немає з\'єднання з сервером. ' +
-            'Перевірте підключення до інтернету й натисніть «Оновити».';
-    }
-    return 'Сервер не віддав список ігор. Спробуйте оновити пізніше.';
-}
+// ---------- Практикум 10: компоненти Vue ----------
 
-// Оновлює підсумок під заголовком секції: скільки ігор отримано і скільки з них зіграно
-function updateApiCount(gameList) {
-    const playedCount = gameList.filter(game => game.played).length;
-    apiCount.textContent = `Ігор у списку: ${gameList.length}. Уже зіграно: ${playedCount}`;
-}
-
-// Завантажує список ігор з JSONPlaceholder (https://jsonplaceholder.typicode.com/,
-// ендпоінт /todos?userId=1) через Fetch API і виводить його функцією renderGames.
-// Помилки HTTP (404, 500) і мережеві збої потрапляють в один catch.
-// Параметр url дає змогу перевірити обробку 404 з консолі:
-// loadData('https://jsonplaceholder.typicode.com/todoz')
-async function loadData(url = API_URL) {
-    setLoading(true);
-    showApiError('');
-    try {
-        const response = await fetch(url);
-        // fetch не вважає 404/500 помилкою, тому статус перевіряємо вручну
-        if (!response.ok) {
-            throw new Error(`Сервер відповів кодом ${response.status} (${url})`);
+// Компонент картки гри. Отримує все через props і не звертається до стану застосунку.
+// Клік по жанру надсилає батьківському компоненту подію filter(genre)
+const GameCard = {
+    props: {
+        title: { type: String, required: true },
+        minPlayers: { type: Number, required: true },
+        maxPlayers: { type: Number, required: true },
+        genre: { type: String, required: true },
+        genreLabel: { type: String, required: true },
+        image: { type: String, default: '' },
+        description: { type: String, default: '' },
+        fits: { type: Boolean, default: false },
+        genreActive: { type: Boolean, default: false }
+    },
+    emits: ['filter'],
+    computed: {
+        // Похідні значення перераховуються самі, коли змінюються props
+        playersText() {
+            return formatPlayers({ minPlayers: this.minPlayers, maxPlayers: this.maxPlayers });
+        },
+        genreHint() {
+            return this.genreActive
+                ? 'Показати ігри всіх жанрів'
+                : `Показати лише жанр «${this.genreLabel}»`;
         }
-        const data = await response.json();
-        console.log('Відповідь API:', data);
-        if (!Array.isArray(data)) {
-            throw new Error('Очікувався масив задач, отримано інший формат JSON');
+    },
+    template: `
+        <article class="game-card" :class="{ fits }"
+                 :data-players="minPlayers + '-' + maxPlayers" :data-genre="genre">
+            <img v-if="image" class="card-img" :src="image" :alt="'Обкладинка настільної гри ' + title">
+            <div v-else class="card-img card-img-placeholder" :class="{ 'long-title': title.length > 30 }"
+                 aria-hidden="true">{{ title }}</div>
+            <div class="card-content">
+                <div class="card-badges">
+                    <p class="player-badge">{{ playersText }}</p>
+                    <button type="button" class="genre-badge" :aria-pressed="String(genreActive)"
+                            :title="genreHint" @click="$emit('filter', genre)">{{ genreLabel }}</button>
+                </div>
+                <h3>{{ title }}</h3>
+                <p v-if="description">{{ description }}</p>
+            </div>
+        </article>`
+};
+
+// Компонент картки гри з API (практикум 9): назва і позначка «зіграно»
+const PlayedGameCard = {
+    props: {
+        title: { type: String, required: true },
+        played: { type: Boolean, required: true }
+    },
+    template: `
+        <article class="game-card" :class="{ played }" :data-played="String(played)">
+            <div class="card-img card-img-placeholder" :class="{ 'long-title': title.length > 30 }"
+                 aria-hidden="true">{{ title }}</div>
+            <div class="card-content">
+                <div class="card-badges">
+                    <p class="played-badge">{{ played ? '✓ Зіграно' : 'Ще не зіграно' }}</p>
+                </div>
+                <h3>{{ title }}</h3>
+            </div>
+        </article>`
+};
+
+// Кореневий компонент: увесь реактивний стан сторінки, обробники подій і запит до API
+const app = Vue.createApp({
+    components: { GameCard, PlayedGameCard },
+
+    data() {
+        return {
+            // Дані варіанта - масив ігор каталогу (практикум 6) у реактивному стані
+            games: [
+                {
+                    id: 1, title: 'Cyberpunk 2077', minPlayers: 1, maxPlayers: 4, genre: 'rpg',
+                    image: 'assets/img/cyberpunk.jpg',
+                    description: 'Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.'
+                },
+                {
+                    id: 2, title: 'Stardew Valley', minPlayers: 1, maxPlayers: 4, genre: 'coop',
+                    image: 'assets/img/stardew.jpg',
+                    description: 'Кооперативна гра про спільний розвиток ферми, риболовлю та дослідження шахт.'
+                },
+                {
+                    id: 3, title: 'Catan', minPlayers: 3, maxPlayers: 4, genre: 'strategy',
+                    image: 'assets/img/catan.jpg',
+                    description: 'Класична стратегія, де гравці збирають ресурси для розбудови власних поселень на острові.'
+                },
+                {
+                    id: 4, title: 'Gloomhaven', minPlayers: 1, maxPlayers: 4, genre: 'rpg',
+                    image: 'assets/img/gloomhaven.jpg',
+                    description: 'Масштабна тактична рольова гра з глибокими підземеллями у похмурому фентезійному світі.'
+                },
+                {
+                    id: 5, title: 'Codenames', minPlayers: 2, maxPlayers: 8, genre: 'party',
+                    description: 'Командна гра на асоціації: капітан одним словом підказує, які агенти належать його команді.'
+                },
+                {
+                    id: 6, title: 'Terraforming Mars', minPlayers: 1, maxPlayers: 5, genre: 'strategy',
+                    description: 'Корпорації змагаються, перетворюючи Марс на планету, придатну для життя.'
+                },
+                {
+                    id: 7, title: 'Dixit', minPlayers: 3, maxPlayers: 6, genre: 'party',
+                    description: 'Гра на уяву: гравці загадують сюрреалістичні картинки та відгадують чужі асоціації.'
+                },
+                {
+                    id: 8, title: '7 Wonders Duel', minPlayers: 2, maxPlayers: 2, genre: 'strategy',
+                    description: 'Дуель двох цивілізацій: розвиток науки, армії та будівництво семи чудес світу.'
+                },
+                {
+                    id: 9, title: 'Avalon', minPlayers: 5, maxPlayers: 10, genre: 'party',
+                    description: 'Гра на соціальну дедукцію: лицарі Артура шукають зрадників серед своїх.'
+                }
+            ],
+            nextId: 10,
+            genreLabels,
+
+            // Фільтри (значення select - рядки, '' - фільтр не задано)
+            playersFilter: '',
+            genreFilter: '',
+
+            // Форма додавання гри (практикум 8)
+            newGame: emptyNewGame(),
+            formError: '',
+            formStatus: '',
+
+            // Ігри з API (практикум 9)
+            apiGames: [],
+            apiLoading: false,
+            apiStatus: '',
+            apiError: ''
+        };
+    },
+
+    computed: {
+        // Кількість гравців з фільтра числом або null
+        targetPlayers() {
+            return this.playersFilter === '' ? null : Number(this.playersFilter);
+        },
+        // Похідний масив: лише ігри, що проходять обидва фільтри
+        filteredGames() {
+            return this.games.filter(game => this.matchesFilters(game));
+        },
+        // Текст підсумку над списком (логіка updateGamesCount з практикуму 8)
+        gamesCountText() {
+            const shown = this.filteredGames.length;
+            let text = `Ігор у списку: ${shown}`;
+            if (shown < this.games.length) {
+                text += ` із ${this.games.length}`;
+            }
+            if (this.genreFilter !== '') {
+                text += `, жанр «${genreLabels[this.genreFilter]}»`;
+            }
+            if (this.targetPlayers !== null) {
+                text += ` (для ${this.targetPlayers} ${this.targetPlayers === 1 ? 'гравця' : 'гравців'})`;
+            }
+            if (shown === 0) {
+                text += '. Спробуйте змінити фільтри';
+            }
+            return text;
+        },
+        apiPlayedCount() {
+            return this.apiGames.filter(game => game.played).length;
         }
+    },
 
-        const apiGames = data.map(todoToGame);
-        renderGames(apiGames, apiList);
-        updateApiCount(apiGames);
-        apiStatus.textContent = apiGames.length === 0
-            ? 'Сервер повернув порожній список.'
-            : `Оновлено о ${new Date().toLocaleTimeString('uk-UA')}.`;
-    } catch (error) {
-        // Попередні дані прибираємо, щоб не видавати їх за актуальні
-        apiList.innerHTML = '';
-        apiCount.textContent = 'Ігор у списку: 0';
-        apiStatus.textContent = '';
-        showApiError(getApiErrorMessage(error));
-        console.error('Помилка завантаження ігор з API:', error);
-    } finally {
-        setLoading(false);
+    methods: {
+        // Чисті функції, доступні в шаблоні
+        fitsPlayers,
+        playersWord,
+
+        matchesFilters(game) {
+            return (this.targetPlayers === null || fitsPlayers(game, this.targetPlayers)) &&
+                (this.genreFilter === '' || game.genre === this.genreFilter);
+        },
+
+        // Обробник події filter від GameCard: показує лише ігри цього жанру,
+        // повторний клік по тому самому жанру знімає фільтр. Select жанру
+        // пов'язаний із genreFilter через v-model, тож оновлюється сам
+        filterByGenre(genre) {
+            this.genreFilter = this.genreFilter === genre ? '' : genre;
+        },
+
+        // Перевірка варіанта практикуму 8: мінімум гравців не може перевищувати максимум
+        getRangeError() {
+            const min = Number(this.newGame.minPlayers);
+            const max = Number(this.newGame.maxPlayers);
+            return min > max
+                ? `Мінімум гравців (${min}) не може бути більшим за максимум (${max})`
+                : '';
+        },
+
+        // Подія input на формі: прибирає повідомлення про успіх і знімає помилку,
+        // щойно користувач виправив діапазон
+        onFormInput() {
+            this.formStatus = '';
+            if (this.formError !== '') {
+                this.formError = this.getRangeError();
+            }
+        },
+
+        // Подія submit форми (@submit.prevent скасовує перезавантаження сторінки).
+        // Браузер викликає її лише після вбудованої перевірки required, pattern, min, max
+        addGame() {
+            const rangeError = this.getRangeError();
+            if (rangeError !== '') {
+                this.formError = rangeError;
+                console.warn(`Помилка валідації: ${rangeError}`);
+                this.$refs.minInput.focus();
+                return;
+            }
+
+            const game = {
+                id: this.nextId++,
+                title: this.newGame.title,
+                minPlayers: Number(this.newGame.minPlayers),
+                maxPlayers: Number(this.newGame.maxPlayers),
+                genre: this.newGame.genre,
+                description: ''
+            };
+            // Vue відстежує push у реактивний масив і сам додає картку в список
+            this.games.push(game);
+            console.log(`Додано гру: ${game.title} (${formatPlayers(game)}). Усього ігор: ${this.games.length}`);
+
+            let status = `Гру «${game.title}» додано до каталогу.`;
+            if (!this.matchesFilters(game)) {
+                this.playersFilter = '';
+                this.genreFilter = '';
+                status += ' Фільтри скинуто, щоб її було видно.';
+            }
+            this.newGame = emptyNewGame();
+            this.formError = '';
+            this.formStatus = status;
+
+            // Після оновлення DOM повідомлення притискається до низу вікна:
+            // видно і його, і щойно додану картку над ним
+            this.$nextTick(() => this.$refs.formStatus.scrollIntoView({ block: 'end' }));
+        },
+
+        // Завантажує список ігор з JSONPlaceholder (https://jsonplaceholder.typicode.com/,
+        // ендпоінт /todos?userId=1) через Fetch API (практикум 9). Результат записується
+        // в стан apiGames, а картки малює компонент PlayedGameCard.
+        // Перевірка 404 з консолі: vm.loadData('https://jsonplaceholder.typicode.com/todoz')
+        async loadData(url = API_URL) {
+            this.apiLoading = true;
+            this.apiStatus = 'Завантаження…';
+            this.apiError = '';
+            try {
+                const response = await fetch(url);
+                // fetch не вважає 404/500 помилкою, тому статус перевіряємо вручну
+                if (!response.ok) {
+                    throw new Error(`Сервер відповів кодом ${response.status} (${url})`);
+                }
+                const data = await response.json();
+                console.log('Відповідь API:', data);
+                if (!Array.isArray(data)) {
+                    throw new Error('Очікувався масив задач, отримано інший формат JSON');
+                }
+
+                this.apiGames = data.map(todoToGame);
+                this.apiStatus = this.apiGames.length === 0
+                    ? 'Сервер повернув порожній список.'
+                    : `Оновлено о ${new Date().toLocaleTimeString('uk-UA')}.`;
+            } catch (error) {
+                // Попередні дані прибираємо, щоб не видавати їх за актуальні
+                this.apiGames = [];
+                this.apiStatus = '';
+                this.apiError = error instanceof TypeError
+                    ? 'Не вдалося завантажити список ігор: немає з\'єднання з сервером. ' +
+                      'Перевірте підключення до інтернету й натисніть «Оновити».'
+                    : 'Сервер не віддав список ігор. Спробуйте оновити пізніше.';
+                console.error('Помилка завантаження ігор з API:', error);
+            } finally {
+                this.apiLoading = false;
+            }
+        }
+    },
+
+    // Перше завантаження даних з API, щойно застосунок змонтовано
+    mounted() {
+        this.loadData();
     }
-}
-
-// Подія click на кнопці «Оновити»: повторний запит без перезавантаження сторінки
-reloadButton.addEventListener('click', () => {
-    loadData();
 });
 
-// Перше завантаження даних з API
-loadData();
+// Монтуємо застосунок у main#app; vm - кореневий компонент (доступний і з консолі)
+const vm = app.mount('#app');
 
 // ---------- Практикум 6: вивід у консоль ----------
 
@@ -449,6 +391,9 @@ function printGamesForPlayers(gameList, n) {
     console.log(summary);
     return foundCount;
 }
+
+// Масив ігор тепер живе в стані застосунку: читаємо його через vm.games
+const games = vm.games;
 
 printCatalogSummary(games);
 printGamesForPlayers(games, playersCount);

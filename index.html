@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Каталог настільних ігор</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Практикум 10: Vue 3, глобальна збірка з CDN (без npm і збірки).
+         Обидва скрипти з defer: виконуються по черзі, коли HTML уже розібрано -->
+    <script src="https://unpkg.com/vue@3.5.45/dist/vue.global.js" defer></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -18,36 +21,26 @@
         </nav>
     </header>
 
-    <main class="container">
+    <!-- Практикум 10: весь main - шаблон Vue-застосунку (монтується в script.js).
+         v-cloak ховає «сирий» шаблон із {{ }}, доки Vue його не обробить -->
+    <main id="app" class="container" v-cloak>
         <section id="filters" class="filters-section">
             <h2>Фільтри</h2>
-            <!-- Список перефільтровується одразу на подію change, тому кнопка не потрібна -->
-            <form id="filters-form" class="filters-form" autocomplete="off">
+            <!-- v-model пов'язує select зі станом застосунку: список оновлюється сам -->
+            <form id="filters-form" class="filters-form" autocomplete="off" @submit.prevent>
                 <div class="filter-group">
                     <label for="player-count">Кількість гравців:</label>
-                    <select id="player-count" name="players">
+                    <select id="player-count" name="players" v-model="playersFilter">
                         <option value="">Будь-яка</option>
-                        <option value="1">1 гравець</option>
-                        <option value="2">2 гравці</option>
-                        <option value="3">3 гравці</option>
-                        <option value="4">4 гравці</option>
-                        <option value="5">5 гравців</option>
-                        <option value="6">6 гравців</option>
-                        <option value="7">7 гравців</option>
-                        <option value="8">8 гравців</option>
-                        <option value="9">9 гравців</option>
-                        <option value="10">10 гравців</option>
+                        <option v-for="n in 10" :key="n" :value="String(n)">{{ n }} {{ playersWord(n) }}</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label for="genre-select">Жанр:</label>
-                    <select id="genre-select" name="genre">
+                    <select id="genre-select" name="genre" v-model="genreFilter">
                         <option value="">Усі жанри</option>
-                        <option value="coop">Кооперативні</option>
-                        <option value="rpg">Рольові (RPG)</option>
-                        <option value="strategy">Стратегії</option>
-                        <option value="party">Вечіркові</option>
+                        <option v-for="(label, key) in genreLabels" :key="key" :value="key">{{ label }}</option>
                     </select>
                 </div>
             </form>
@@ -55,98 +48,84 @@
 
         <section id="games" class="games-section">
             <h2>Ігри</h2>
-            <p id="games-count" class="games-count">Ігор у списку: 4</p>
+            <p id="games-count" class="games-count">{{ gamesCountText }}</p>
 
-            <!-- Статичні картки - приклад структури з практикуму 2;
-                 script.js видаляє їх і генерує картки з масиву games -->
+            <!-- Список карток - компонент GameCard для кожної гри (v-for з :key за id).
+                 Клік по жанру в картці надсилає подію filter, а застосунок фільтрує масив -->
             <div id="games-list" class="cards-grid">
-                <article class="game-card">
-                    <img class="card-img" src="assets/img/cyberpunk.jpg" alt="Обкладинка настільної гри Cyberpunk 2077">
-                    <div class="card-content">
-                        <span class="player-badge">1-4 гравці</span>
-                        <h3>Cyberpunk 2077</h3>
-                        <p>Настільна адаптація з фокусом на спеціалізовані білди, зброю та тактичні бої у Найт-Сіті.</p>
-                    </div>
-                </article>
-
-                <article class="game-card">
-                    <img class="card-img" src="assets/img/stardew.jpg" alt="Обкладинка настільної гри Stardew Valley">
-                    <div class="card-content">
-                        <span class="player-badge">1-4 гравці</span>
-                        <h3>Stardew Valley</h3>
-                        <p>Кооперативна гра для 1-4 гравців про спільний розвиток ферми, риболовлю та дослідження шахт.</p>
-                    </div>
-                </article>
-                
-                <article class="game-card">
-                    <img class="card-img" src="assets/img/catan.jpg" alt="Обкладинка настільної гри Catan">
-                    <div class="card-content">
-                        <span class="player-badge">3-4 гравці</span>
-                        <h3>Catan</h3>
-                        <p>Класична стратегія, де гравці збирають ресурси для розбудови власних поселень на острові.</p>
-                    </div>
-                </article>
-
-                <article class="game-card">
-                    <img class="card-img" src="assets/img/gloomhaven.jpg" alt="Обкладинка настільної гри Gloomhaven">
-                    <div class="card-content">
-                        <span class="player-badge">1-4 гравці</span>
-                        <h3>Gloomhaven</h3>
-                        <p>Масштабна тактична рольова гра з глибокими підземеллями у похмурому фентезійному світі.</p>
-                    </div>
-                </article>
+                <game-card
+                    v-for="game in filteredGames"
+                    :key="game.id"
+                    :title="game.title"
+                    :min-players="game.minPlayers"
+                    :max-players="game.maxPlayers"
+                    :genre="game.genre"
+                    :genre-label="genreLabels[game.genre]"
+                    :image="game.image"
+                    :description="game.description"
+                    :fits="targetPlayers !== null && fitsPlayers(game, targetPlayers)"
+                    :genre-active="genreFilter === game.genre"
+                    @filter="filterByGenre"
+                ></game-card>
             </div>
         </section>
 
         <!-- Секція одразу під списком: нова картка з'являється поруч із формою -->
         <section id="add-game" class="add-game-section">
             <h2>Додати гру</h2>
-            <form id="add-game-form" class="add-form">
-                <p id="form-status" class="form-status" role="status"></p>
+            <form id="add-game-form" class="add-form" @submit.prevent="addGame" @input="onFormInput">
+                <p id="form-status" class="form-status" role="status" ref="formStatus">{{ formStatus }}</p>
 
                 <div class="filter-group">
                     <label for="new-title">Назва:</label>
                     <input type="text" id="new-title" name="title" required maxlength="40"
-                           pattern=".*\S.*" title="Назва не може складатися лише з пробілів">
+                           pattern=".*\S.*" title="Назва не може складатися лише з пробілів"
+                           v-model.trim="newGame.title">
                 </div>
 
                 <div class="filter-group">
                     <label for="new-min-players">Мінімум гравців:</label>
-                    <input type="number" id="new-min-players" name="minPlayers" required min="1" max="10">
+                    <input type="number" id="new-min-players" name="minPlayers" required min="1" max="10"
+                           v-model="newGame.minPlayers" :aria-invalid="String(formError !== '')" ref="minInput">
                 </div>
 
                 <div class="filter-group">
                     <label for="new-max-players">Максимум гравців:</label>
-                    <input type="number" id="new-max-players" name="maxPlayers" required min="1" max="10">
+                    <input type="number" id="new-max-players" name="maxPlayers" required min="1" max="10"
+                           v-model="newGame.maxPlayers" :aria-invalid="String(formError !== '')">
                 </div>
 
                 <div class="filter-group">
                     <label for="new-genre">Жанр:</label>
-                    <select id="new-genre" name="genre">
-                        <option value="coop">Кооперативні</option>
-                        <option value="rpg">Рольові (RPG)</option>
-                        <option value="strategy">Стратегії</option>
-                        <option value="party">Вечіркові</option>
+                    <select id="new-genre" name="genre" v-model="newGame.genre">
+                        <option v-for="(label, key) in genreLabels" :key="key" :value="key">{{ label }}</option>
                     </select>
                 </div>
 
                 <button type="submit" class="btn-primary">Додати гру</button>
 
-                <p id="form-error" class="form-error" role="alert" hidden></p>
+                <p id="form-error" class="form-error" role="alert" v-show="formError !== ''">{{ formError }}</p>
             </form>
         </section>
 
-        <!-- Практикум 9: список завантажується з JSONPlaceholder через fetch (script.js) -->
+        <!-- Практикум 9-10: список з JSONPlaceholder (fetch), картки - компонент PlayedGameCard -->
         <section id="api-games" class="api-section">
             <h2>Ігри з API</h2>
             <div class="api-toolbar">
                 <p class="api-note">Список «зіграти» з тестового сервісу JSONPlaceholder: назва гри та позначка, чи її вже зіграно.</p>
-                <button type="button" id="api-reload" class="btn-primary">Оновити</button>
+                <button type="button" id="api-reload" class="btn-primary" :disabled="apiLoading" @click="loadData()">Оновити</button>
             </div>
-            <p id="api-status" class="api-status" role="status"></p>
-            <p id="api-error" class="form-error api-error" role="alert" hidden></p>
-            <p id="api-games-count" class="games-count">Ігор у списку: 0</p>
-            <div id="api-games-list" class="cards-grid"></div>
+            <p id="api-status" class="api-status" role="status">{{ apiStatus }}</p>
+            <p id="api-error" class="form-error api-error" role="alert" v-show="apiError !== ''">{{ apiError }}</p>
+            <p id="api-games-count" class="games-count">Ігор у списку: {{ apiGames.length }}. Уже зіграно: {{ apiPlayedCount }}</p>
+            <div id="api-games-list" class="cards-grid" :aria-busy="String(apiLoading)">
+                <played-game-card
+                    v-for="game in apiGames"
+                    :key="game.id"
+                    :title="game.title"
+                    :played="game.played"
+                ></played-game-card>
+            </div>
         </section>
     </main>
 
